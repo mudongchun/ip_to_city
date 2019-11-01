@@ -19,9 +19,10 @@ public class IPAddressUtils {
     //日志记录对象
     private static Logger log = LoggerFactory.getLogger(IPAddressUtils.class);
     //纯真IP数据库名
-    private final String IP_FILE= "/opt/data/ipdatabase/qqwry.dat";
+    //private final String IP_FILE= "/opt/data/ipdatabase/qqwry.dat";
+    private final String IP_FILE= "D:\\csii\\dmp\\GeoLite2-City_20190924\\qqwry.dat";
     // GeoIP数据库名
-    private final String filepath = "/opt/data/ipdatabase/GeoLiteCity.dat";
+    private final String filepath = "D:\\csii\\dmp\\GeoLite2-City_20190924\\GeoLiteCity.dat";
      // 常量，比如记录长度等等
     private static final int IP_RECORD_LENGTH = 7;
      // 常量，读取模式1
@@ -213,11 +214,7 @@ public class IPAddressUtils {
         long ret = 0;
         try {
             ipFile.seek(offset);
-            ipFile.readFully(b3);
-            ret |= (b3[0] & 0xFF);
-            ret |= ((b3[1] << 8) & 0xFF00);
-            ret |= ((b3[2] << 16) & 0xFF0000);
-            return ret;
+            return getAnLong(ret);
         } catch (IOException e) {
             return -1;
         }
@@ -230,14 +227,18 @@ public class IPAddressUtils {
     private long readLong3() {
         long ret = 0;
         try {
-            ipFile.readFully(b3);
-            ret |= (b3[0] & 0xFF);
-            ret |= ((b3[1] << 8) & 0xFF00);
-            ret |= ((b3[2] << 16) & 0xFF0000);
-            return ret;
+            return getAnLong(ret);
         } catch (IOException e) {
             return -1;
         }
+    }
+
+    private long getAnLong(long ret) throws IOException {
+        ipFile.readFully(b3);
+        ret |= (b3[0] & 0xFF);
+        ret |= ((b3[1] << 8) & 0xFF00);
+        ret |= ((b3[2] << 16) & 0xFF0000);
+        return ret;
     }
 
     /**
@@ -250,12 +251,7 @@ public class IPAddressUtils {
         try {
             ipFile.seek(offset);
             ipFile.readFully(ip);
-            byte temp = ip[0];
-            ip[0] = ip[3];
-            ip[3] = temp;
-            temp = ip[1];
-            ip[1] = ip[2];
-            ip[2] = temp;
+            reverse(ip);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
@@ -270,6 +266,10 @@ public class IPAddressUtils {
     private void readIP(int offset, byte[] ip) {
         mbb.position(offset);
         mbb.get(ip);
+        reverse(ip);
+    }
+
+    private void reverse(byte[] ip) {
         byte temp = ip[0];
         ip[0] = ip[3];
         ip[3] = temp;
@@ -503,18 +503,5 @@ public class IPAddressUtils {
             log.error(e.getMessage(), e);
         }
         return "";
-    }
-
-    public String getCity(String ipAddress){
-        try {
-            if(ipAddress.startsWith("192.168.")){
-                log.error("此IP[{}]段不进行处理！", ipAddress);
-                return null;
-            }
-            return getIPLocation(ipAddress).getCity();
-        }catch (Exception e){
-            log.error("根据IP[{}]获取省份失败:{}", ipAddress, e.getMessage());
-            return null;
-        }
     }
 }
