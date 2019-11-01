@@ -1,5 +1,6 @@
 package com.csii.hive.iplocation;
 
+import com.maxmind.geoip.LookupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,76 +19,60 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class IPAddressUtils {
     private static Logger log = LoggerFactory.getLogger(IPAddressUtils.class);
-    /**
-     * 纯真IP数据库名
-     */
-    private String IP_FILE= "/root/qqwry.dat";
-    /**
-     * 纯真IP数据库保存的文件夹
-     */
-    private String INSTALL_DIR="/root";
+    //纯真IP数据库名
+    private final String IP_FILE= "/opt/data/ipdatabase/qqwry.dat";
 
-    /**
-     * 常量，比如记录长度等等
-     */
+    // GeoIP数据库名
+    private final String filepath = "/opt/data/ipdatabase/GeoLiteCity.dat";
+
+     // 常量，比如记录长度等等
     private static final int IP_RECORD_LENGTH = 7;
-    /**
-     * 常量，读取模式1
-     */
+
+     // 常量，读取模式1
     private static final byte REDIRECT_MODE_1 = 0x01;
-    /**
-     * 常量，读取模式2
-     */
+
+    // 常量，读取模式2
     private static final byte REDIRECT_MODE_2 = 0x02;
 
-    /**
-     * 缓存，查询IP时首先查询缓存，以减少不必要的重复查找
-     */
+    // 缓存，查询IP时首先查询缓存，以减少不必要的重复查找
     private Map<String, IPLocation> ipCache;
-    /**
-     * 随机文件访问类
-     */
-    private RandomAccessFile ipFile;
-    /**
-     * 内存映射文件
-     */
+
+    //随机文件访问类
+    private  RandomAccessFile ipFile;
+
+    //内存映射文件
     private MappedByteBuffer mbb;
-    /**
-     * 起始地区的开始和结束的绝对偏移
-     */
+    // 起始地区的开始和结束的绝对偏移
     private long ipBegin, ipEnd;
 
-    /**
-     * 为提高效率而采用的临时变量
-     */
-    private IPLocation loc;
-    /**
-     * 为提高效率而采用的临时变量
-     */
+    // 为提高效率而采用的临时变量
     private byte[] buf;
-    /**
-     * 为提高效率而采用的临时变量
-     */
+
+    //为提高效率而采用的临时变量
     private byte[] b4;
-    /**
-     * 为提高效率而采用的临时变量
-     */
+
+    // 为提高效率而采用的临时变量
     private byte[] b3;
-    /**
-     * IP地址库文件错误
-     */
+
+    // IP地址库文件错误
     private static final String BAD_IP_FILE     =   "IP地址库文件错误";
-    /**
-     * 未知国家
-     */
+
+    // 未知国家
     private static final String UNKNOWN_COUNTRY   =   "未知国家";
-    /**
-     * 未知地区
-     */
+
+    // 未知地区
     private static final String UNKNOWN_AREA    =   "未知地区";
 
+    //获取城市和省份对象
+    private  static IPLocation loc;
 
-    public void init() {
+    //查询经纬度的服务
+    private LookupService lookupService;
+
+    public IPAddressUtils(){
+        init();
+    }
+    public  void init() {
         try {
             // 缓存一定要用ConcurrentHashMap， 避免多线程下获取为空
             ipCache = new ConcurrentHashMap();
@@ -98,23 +83,7 @@ public class IPAddressUtils {
             try {
                 ipFile = new RandomAccessFile(IP_FILE, "r");
             } catch (FileNotFoundException e) {
-                // 如果找不到这个文件，再尝试再当前目录下搜索，这次全部改用小写文件名
-                //     因为有些系统可能区分大小写导致找不到ip地址信息文件
-                String filename = new File(IP_FILE).getName().toLowerCase();
-                File[] files = new File(INSTALL_DIR).listFiles();
-                for(int i = 0; i < files.length; i++) {
-                    if(files[i].isFile()) {
-                        if(files[i].getName().toLowerCase().equals(filename)) {
-                            try {
-                                ipFile = new RandomAccessFile(files[i], "r");
-                            } catch (FileNotFoundException e1) {
-                                log.error("IP地址信息文件没有找到，IP显示功能将无法使用:{}" + e1.getMessage(), e1);
-                                ipFile = null;
-                            }
-                            break;
-                        }
-                    }
-                }
+                log.error("file not found:" + e.getMessage(), e);
             }
             // 如果打开文件成功，读取文件头信息
             if(ipFile != null) {
@@ -131,22 +100,26 @@ public class IPAddressUtils {
                 }
             }
 
+            lookupService = new LookupService(filepath);
+
         } catch (Exception e) {
             log.error("IP地址服务初始化异常:" + e.getMessage(), e);
         }
     }
 
+    public LookupService getLookupService(){
+        return lookupService;
+    }
     /**
      * 查询IP地址位置 - synchronized的作用是避免多线程时获取区域信息为空
      * @param ip
      * @return
      */
-    public synchronized IPLocation getIPLocation(final String ip) {
-        IPLocation location = new IPLocation();
-        location.setArea(this.getArea(ip));
-        location.setCountry(this.getCountry(ip));
+    public synchronized IPLocation getIPLocation(String ip) {
+        loc.setArea(this.getArea(ip));
+        loc.setCountry(this.getCountry(ip));
 
-        return location;
+        return loc;
     }
 
     /**
@@ -580,12 +553,5 @@ public class IPAddressUtils {
             log.error("根据IP[{}]获取省份失败:{}", ipAddress, e.getMessage());
             return null;
         }
-    }
-
-    public IPLocation getregion(String ip){
-        IPAddressUtils ipAddressUtils = new IPAddressUtils();
-        ipAddressUtils.init();
-        return ipAddressUtils.getIPLocation(ip);
-
     }
 }
