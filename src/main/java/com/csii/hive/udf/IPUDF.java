@@ -14,8 +14,6 @@ public class IPUDF extends UDF {
     private IPAddressUtils ipAddressUtils = new IPAddressUtils();
 
     public  String evaluate(String ip) {
-        String res = null;
-
         //1. 获取经纬度
         Location location = ipAddressUtils.getLookupService().getLocation(ip);
         String longitude = String.valueOf(location.longitude);
@@ -25,7 +23,6 @@ public class IPUDF extends UDF {
         IPLocation ipLocation = ipAddressUtils.getIPLocation(ip);
         String province = ipLocation.getRegion();
         String city = ipLocation.getCity();
-        res = longitude + "u" + latitude + "u" + province + "u" + city;
-        return res;
+        return longitude + "u" + latitude + "u" + province + "u" + city;
     }
 }

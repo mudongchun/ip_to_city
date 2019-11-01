@@ -82,6 +82,7 @@ public class IPAddressUtils {
             b3 = new byte[3];
             try {
                 ipFile = new RandomAccessFile(IP_FILE, "r");
+                lookupService = new LookupService(filepath);
             } catch (FileNotFoundException e) {
                 log.error("file not found:" + e.getMessage(), e);
             }
@@ -99,9 +100,6 @@ public class IPAddressUtils {
                     ipFile = null;
                 }
             }
-
-            lookupService = new LookupService(filepath);
-
         } catch (Exception e) {
             log.error("IP地址服务初始化异常:" + e.getMessage(), e);
         }
