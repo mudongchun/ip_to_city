@@ -3,8 +3,6 @@ package com.csii.hive.iplocation;
 import com.maxmind.geoip.LookupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -18,54 +16,40 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Date 2019/10/8 14:27
  */
 public class IPAddressUtils {
+    //日志记录对象
     private static Logger log = LoggerFactory.getLogger(IPAddressUtils.class);
     //纯真IP数据库名
     private final String IP_FILE= "/opt/data/ipdatabase/qqwry.dat";
-
     // GeoIP数据库名
     private final String filepath = "/opt/data/ipdatabase/GeoLiteCity.dat";
-
      // 常量，比如记录长度等等
     private static final int IP_RECORD_LENGTH = 7;
-
      // 常量，读取模式1
     private static final byte REDIRECT_MODE_1 = 0x01;
-
     // 常量，读取模式2
     private static final byte REDIRECT_MODE_2 = 0x02;
-
     // 缓存，查询IP时首先查询缓存，以减少不必要的重复查找
     private Map<String, IPLocation> ipCache;
-
     //随机文件访问类
     private  RandomAccessFile ipFile;
-
     //内存映射文件
     private MappedByteBuffer mbb;
     // 起始地区的开始和结束的绝对偏移
     private long ipBegin, ipEnd;
-
     // 为提高效率而采用的临时变量
     private byte[] buf;
-
     //为提高效率而采用的临时变量
     private byte[] b4;
-
     // 为提高效率而采用的临时变量
     private byte[] b3;
-
     // IP地址库文件错误
     private static final String BAD_IP_FILE     =   "IP地址库文件错误";
-
     // 未知国家
     private static final String UNKNOWN_COUNTRY   =   "未知国家";
-
     // 未知地区
     private static final String UNKNOWN_AREA    =   "未知地区";
-
     //获取城市和省份对象
     private  static IPLocation loc;
-
     //查询经纬度的服务
     private LookupService lookupService;
 
@@ -114,8 +98,9 @@ public class IPAddressUtils {
      * @return
      */
     public synchronized IPLocation getIPLocation(String ip) {
-        loc.setArea(this.getArea(ip));
-        loc.setCountry(this.getCountry(ip));
+        //todo
+        loc.setArea(getArea(ip));
+        loc.setCountry(getCountry(ip));
 
         return loc;
     }
@@ -143,30 +128,19 @@ public class IPAddressUtils {
      * @param ip ip的字节数组形式
      * @return 国家名字符串
      */
-    public String getCountry(byte[] ip) {
+    public String getCountry(String ip) {
         // 检查ip地址文件是否正常
         if(ipFile == null)
             return BAD_IP_FILE;
-        // 保存ip，转换ip字节数组为字符串形式
-        String ipStr = Util.getIpStringFromBytes(ip);
         // 先检查cache中是否已经包含有这个ip的结果，没有再搜索文件
-        if(ipCache.containsKey(ipStr)) {
-            IPLocation ipLoc = ipCache.get(ipStr);
+        if(ipCache.containsKey(ip)) {
+            IPLocation ipLoc = ipCache.get(ip);
             return ipLoc.getCountry();
         } else {
-            IPLocation ipLoc = getIPLocation(ip);
-            ipCache.put(ipStr, ipLoc.getCopy());
+            IPLocation ipLoc = getIPLocation(Util.getIpByteArrayFromString(ip));
+            ipCache.put(ip, ipLoc.getCopy());
             return ipLoc.getCountry();
         }
-    }
-
-    /**
-     * 根据IP得到国家名
-     * @param ip IP的字符串形式
-     * @return 国家名字符串
-     */
-    public String getCountry(String ip) {
-        return getCountry(Util.getIpByteArrayFromString(ip));
     }
 
     /**
@@ -174,31 +148,22 @@ public class IPAddressUtils {
      * @param ip ip的字节数组形式
      * @return 地区名字符串
      */
-    public String getArea(final byte[] ip) {
+    public String getArea(String ip) {
         // 检查ip地址文件是否正常
         if(ipFile == null)
             return BAD_IP_FILE;
-        // 保存ip，转换ip字节数组为字符串形式
-        String ipStr = Util.getIpStringFromBytes(ip);
         // 先检查cache中是否已经包含有这个ip的结果，没有再搜索文件
-        if(ipCache.containsKey(ipStr)) {
-            IPLocation ipLoc = ipCache.get(ipStr);
+        if(ipCache.containsKey(ip)) {
+            IPLocation ipLoc = ipCache.get(ip);
             return ipLoc.getArea();
         } else {
-            IPLocation ipLoc = getIPLocation(ip);
-            ipCache.put(ipStr, ipLoc.getCopy());
+            IPLocation ipLoc = getIPLocation(Util.getIpByteArrayFromString(ip));
+            ipCache.put(ip, ipLoc.getCopy());
             return ipLoc.getArea();
         }
     }
 
-    /**
-     * 根据IP得到地区名
-     * @param ip IP的字符串形式
-     * @return 地区名字符串
-     */
-    public String getArea(final String ip) {
-        return getArea(Util.getIpByteArrayFromString(ip));
-    }
+
 
     /**
      * 根据ip搜索ip信息文件，得到IPLocation结构，所搜索的ip参数从类成员ip中得到
@@ -540,7 +505,7 @@ public class IPAddressUtils {
         return "";
     }
 
-    public String getCity(final String ipAddress){
+    public String getCity(String ipAddress){
         try {
             if(ipAddress.startsWith("192.168.")){
                 log.error("此IP[{}]段不进行处理！", ipAddress);
