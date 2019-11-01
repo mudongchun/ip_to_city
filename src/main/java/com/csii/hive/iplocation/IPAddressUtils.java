@@ -19,10 +19,9 @@ public class IPAddressUtils {
     //日志记录对象
     private static Logger log = LoggerFactory.getLogger(IPAddressUtils.class);
     //纯真IP数据库名
-    //private final String IP_FILE= "/opt/data/ipdatabase/qqwry.dat";
-    private final String IP_FILE= "D:\\csii\\dmp\\GeoLite2-City_20190924\\qqwry.dat";
+    private final String IP_FILE= "/opt/data/ipdatabase/qqwry.dat";
     // GeoIP数据库名
-    private final String filepath = "D:\\csii\\dmp\\GeoLite2-City_20190924\\GeoLiteCity.dat";
+    private final String filepath = "/opt/data/ipdatabase/GeoLiteCity.dat";
      // 常量，比如记录长度等等
     private static final int IP_RECORD_LENGTH = 7;
      // 常量，读取模式1
