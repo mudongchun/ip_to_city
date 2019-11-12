@@ -17,13 +17,13 @@ public class IPUDF extends UDF {
         StringBuilder sb = new StringBuilder(64);
         //1. 获取经纬度
         Location location = ipAddressUtils.getLookupService().getLocation(ip);
-        sb.append(location.longitude).append(",").append(location.latitude).append(",");
+        sb.append(location.longitude).append("u").append(location.latitude).append("u");
 
         //2. 获取省份和城市
         IPLocation ipLocation = ipAddressUtils.getIPLocation(ip);
         String province = ipLocation.getRegion();
         String city = ipLocation.getCity();
-        sb.append(province).append(",").append(city);
+        sb.append(province).append("u").append(city);
         return sb.toString();
     }
 }
