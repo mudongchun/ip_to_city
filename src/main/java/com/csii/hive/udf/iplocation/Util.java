@@ -1,4 +1,4 @@
-package com.csii.hive.iplocation;
+package com.csii.hive.udf.iplocation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

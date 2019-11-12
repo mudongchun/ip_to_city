@@ -1,4 +1,4 @@
-package com.csii.hive.iplocation;
+package com.csii.hive.udf.iplocation;
 
 /**
  * Created by angel；
